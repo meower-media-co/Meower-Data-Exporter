@@ -87,7 +87,7 @@ type IconUpload struct {
 	Size       int64
 	Width      int
 	Height     int
-	UploadedBy string
+	Uploader string
 	UploadedAt int64
 	UsedBy     string
 }
@@ -100,7 +100,7 @@ type AttachmentUpload struct {
 	Size       int64
 	Width      int
 	Height     int
-	UploadedBy string
+	Uploader string
 	UploadedAt int64
 	UsedBy     string
 }
