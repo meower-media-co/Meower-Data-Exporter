@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	_ "github.com/glebarez/go-sqlite"
+	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
