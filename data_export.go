@@ -109,7 +109,6 @@ func (d *DataExport) markAsFailed(err error) {
 	_, err = mdb.Collection("data_exports").UpdateOne(ctx, bson.D{{Key: "_id", Value: d.Id}}, bson.D{{Key: "$set", Value: bson.D{
 		{Key: "status", Value: "failed"},
 		{Key: "error", Value: err.Error()},
-		{Key: "completed_at", Value: time.Now().Unix()},
 	}}})
 	if err != nil {
 		log.Fatalln(err)
