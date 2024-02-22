@@ -387,7 +387,7 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 		"uploaded_at",
 		"used_by",
 	})
-	rows, err := udb.Query("SELECT * FROM icons WHERE uploader = ?", d.User)
+	rows, err := udb.Query("SELECT * FROM icons WHERE uploader=$1;", d.User)
 	if err != nil {
 		return err
 	}
@@ -401,7 +401,7 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 			&iconUpload.Size,
 			&iconUpload.Width,
 			&iconUpload.Height,
-			&iconUpload.UploadedBy,
+			&iconUpload.Uploader,
 			&iconUpload.UploadedAt,
 			&iconUpload.UsedBy,
 		)
@@ -438,7 +438,7 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 		"uploaded_at",
 		"used_by",
 	})
-	rows, err = udb.Query("SELECT * FROM attachments WHERE uploader = ?", d.User)
+	rows, err = udb.Query("SELECT * FROM attachments WHERE uploader=$1", d.User)
 	if err != nil {
 		return err
 	}
@@ -453,7 +453,7 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 			&attachmentUpload.Size,
 			&attachmentUpload.Width,
 			&attachmentUpload.Height,
-			&attachmentUpload.UploadedBy,
+			&attachmentUpload.Uploader,
 			&attachmentUpload.UploadedAt,
 			&attachmentUpload.UsedBy,
 		)
