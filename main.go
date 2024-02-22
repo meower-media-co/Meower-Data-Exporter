@@ -101,7 +101,7 @@ func main() {
 		if msg.Payload == "0" { // Look for new data export requests
 			// Get data export requests
 			var dataExports []DataExport
-			filter := bson.D{{Key: "completed_at", Value: nil}}
+			filter := bson.D{{Key: "status", Value: "pending"}}
 			opts := options.Find().SetProjection(bson.D{{Key: "_id", Value: 1}, {Key: "user", Value: 1}})
 			cur, err := mdb.Collection("data_exports").Find(ctx, filter, opts)
 			if err != nil {
