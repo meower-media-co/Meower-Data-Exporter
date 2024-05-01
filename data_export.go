@@ -384,7 +384,6 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 		"width",
 		"height",
 		"uploaded_at",
-		"used_by",
 	})
 	rows, err := udb.Query("SELECT * FROM icons WHERE uploader=$1;", d.User)
 	if err != nil {
@@ -402,7 +401,6 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 			&iconUpload.Height,
 			&iconUpload.Uploader,
 			&iconUpload.UploadedAt,
-			&iconUpload.UsedBy,
 		)
 		if err != nil {
 			return err
@@ -415,7 +413,6 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 			strconv.Itoa(iconUpload.Width),
 			strconv.Itoa(iconUpload.Height),
 			strconv.FormatInt(iconUpload.UploadedAt, 10),
-			iconUpload.UsedBy,
 		})
 	}
 	csvWriter.Flush()
