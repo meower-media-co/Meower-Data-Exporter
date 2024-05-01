@@ -89,7 +89,6 @@ type IconUpload struct {
 	Height     int
 	Uploader string
 	UploadedAt int64
-	UsedBy     string
 }
 
 type AttachmentUpload struct {
