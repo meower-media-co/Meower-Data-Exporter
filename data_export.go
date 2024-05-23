@@ -56,7 +56,11 @@ func (d *DataExport) execute() {
 	}
 
 	// Upload ZIP file to MinIO
-	_, err = s3.FPutObject(ctx, "data-exports", d.Id, os.Getenv("OUTPUT_DIR")+"/"+d.Id, minio.PutObjectOptions{})
+	_, err = s3.FPutObject(ctx, "data-exports", d.Id, os.Getenv("OUTPUT_DIR")+"/"+d.Id, minio.PutObjectOptions{
+		UserMetadata: map[string]string{
+			"user-id": d.User,
+		},
+	})
 	if err != nil {
 		d.markAsFailed(err)
 		return
@@ -325,10 +329,11 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 		csvWriter.Write([]string{
 			"id",
 			"content",
-			"unfiltered_content",
+			"attachments",
 			"timestamp",
 			"revisions",
 			"edited_at",
+			"pinned",
 			"deleted",
 			"mod_deleted",
 			"deleted_at",
@@ -339,9 +344,9 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 				return err
 			}
 
-			var unfilteredContent string
-			if post.UnfilteredContent != nil {
-				unfilteredContent = *post.UnfilteredContent
+			marshaledAttachments, err := json.Marshal(post.Attachments)
+			if err != nil {
+				return err
 			}
 
 			var editedAt string
@@ -357,10 +362,11 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 			csvWriter.Write([]string{
 				post.Id,
 				post.Content,
-				unfilteredContent,
+				string(marshaledAttachments),
 				strconv.FormatInt(post.Timestamp.Epoch, 10),
 				string(marshaledRevisions),
 				editedAt,
+				strconv.FormatBool(post.Pinned),
 				strconv.FormatBool(post.Deleted),
 				strconv.FormatBool(post.ModDeleted),
 				deletedAt,
@@ -370,8 +376,8 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 		zipWriter.Flush()
 	}
 
-	// Export icon uploads
-	fileWriter, err = zipWriter.Create("uploads/icons.csv")
+	// Export file uploads
+	fileWriter, err = zipWriter.Create("uploads.csv")
 	if err != nil {
 		return err
 	}
@@ -379,93 +385,51 @@ func (d *DataExport) runExport(zipWriter *zip.Writer) error {
 	csvWriter.Write([]string{
 		"id",
 		"hash",
-		"mime",
-		"size",
-		"width",
-		"height",
-		"uploaded_at",
-	})
-	rows, err := udb.Query("SELECT * FROM icons WHERE uploader=$1;", d.User)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var iconUpload IconUpload
-		err = rows.Scan(
-			&iconUpload.Id,
-			&iconUpload.Hash,
-			&iconUpload.Mime,
-			&iconUpload.Size,
-			&iconUpload.Width,
-			&iconUpload.Height,
-			&iconUpload.Uploader,
-			&iconUpload.UploadedAt,
-		)
-		if err != nil {
-			return err
-		}
-		csvWriter.Write([]string{
-			iconUpload.Id,
-			iconUpload.Hash,
-			iconUpload.Mime,
-			strconv.FormatInt(iconUpload.Size, 10),
-			strconv.Itoa(iconUpload.Width),
-			strconv.Itoa(iconUpload.Height),
-			strconv.FormatInt(iconUpload.UploadedAt, 10),
-		})
-	}
-	csvWriter.Flush()
-
-	// Export attachment uploads
-	fileWriter, err = zipWriter.Create("uploads/attachments.csv")
-	if err != nil {
-		return err
-	}
-	csvWriter = csv.NewWriter(fileWriter)
-	csvWriter.Write([]string{
-		"id",
-		"hash",
-		"mime",
+		"bucket",
 		"filename",
-		"size",
 		"width",
 		"height",
 		"uploaded_at",
-		"used_by",
+		"claimed",
 	})
-	rows, err = udb.Query("SELECT * FROM attachments WHERE uploader=$1", d.User)
+	rows, err := udb.Query(`SELECT
+		id,
+		hash,
+		bucket,
+		filename,
+		width,
+		height,
+		uploaded_at,
+		claimed
+	FROM files WHERE uploaded_by=$1`, d.User)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var attachmentUpload AttachmentUpload
+		var f FileUpload
 		err = rows.Scan(
-			&attachmentUpload.Id,
-			&attachmentUpload.Hash,
-			&attachmentUpload.Mime,
-			&attachmentUpload.Filename,
-			&attachmentUpload.Size,
-			&attachmentUpload.Width,
-			&attachmentUpload.Height,
-			&attachmentUpload.Uploader,
-			&attachmentUpload.UploadedAt,
-			&attachmentUpload.UsedBy,
+			&f.Id,
+			&f.Hash,
+			&f.Bucket,
+			&f.Filename,
+			&f.Width,
+			&f.Height,
+			&f.UploadedAt,
+			&f.Claimed,
 		)
 		if err != nil {
 			return err
 		}
 		csvWriter.Write([]string{
-			attachmentUpload.Id,
-			attachmentUpload.Hash,
-			attachmentUpload.Mime,
-			attachmentUpload.Filename,
-			strconv.FormatInt(attachmentUpload.Size, 10),
-			strconv.Itoa(attachmentUpload.Width),
-			strconv.Itoa(attachmentUpload.Height),
-			strconv.FormatInt(attachmentUpload.UploadedAt, 10),
-			attachmentUpload.UsedBy,
+			f.Id,
+			f.Hash,
+			f.Bucket,
+			f.Filename,
+			strconv.Itoa(f.Width),
+			strconv.Itoa(f.Height),
+			strconv.FormatInt(f.UploadedAt, 10),
+			strconv.FormatBool(f.Claimed),
 		})
 	}
 	csvWriter.Flush()

@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
 
 	_ "github.com/glebarez/go-sqlite"
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/redis/go-redis/v9"
@@ -23,6 +24,8 @@ var rdb *redis.Client   // Redis DB (rdb)
 var mdb *mongo.Database // Main DB (mdb)
 var udb *sql.DB         // Uploads DB (udb)
 var s3 *minio.Client    // MinIO client (s3)
+
+var ErrBucketDoesNotExist = errors.New("data-exports S3 bucket does not exist")
 
 func main() {
 	// Load dotenv
@@ -83,9 +86,11 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	_, err = s3.BucketExists(ctx, "data-exports")
+	bucketExists, err := s3.BucketExists(ctx, "data-exports")
 	if err != nil {
 		log.Fatalln(err)
+	} else if !bucketExists {
+		log.Fatalln(ErrBucketDoesNotExist)
 	}
 
 	// Tell other running instances (if there are any) to quit

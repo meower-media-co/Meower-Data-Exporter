@@ -4,6 +4,8 @@ type User struct {
 	Id          string `bson:"uuid" json:"id"`
 	Username    string `bson:"_id" json:"username"`
 	PfpData     int64  `bson:"pfp_data" json:"pfp_data"`
+	Avatar      string `bson:"avatar" json:"avatar"`
+	AvatarColor string `bson:"avatar_color" json:"avatar_color"`
 	Quote       string `bson:"quote" json:"quote"`
 	Flags       int64  `bson:"flags" json:"flags"`
 	Permissions int64  `bson:"permissions" json:"permissions"`
@@ -51,20 +53,24 @@ type Report struct {
 }
 
 type Chat struct {
-	Id         string   `bson:"_id" json:"id"`
-	Type       int      `bson:"type" json:"type"`
-	Nickname   string   `bson:"nickname" json:"nickname"`
-	Owner      string   `bson:"owner" json:"owner"`
-	Members    []string `bson:"members" json:"members"`
-	Created    int64    `bson:"created" json:"created"`
-	LastActive int64    `bson:"last_active" json:"last_active"`
-	Deleted    bool     `bson:"deleted" json:"deleted"`
+	Id           string   `bson:"_id" json:"id"`
+	Type         int      `bson:"type" json:"type"`
+	Nickname     string   `bson:"nickname" json:"nickname"`
+	Icon         string   `bson:"icon" json:"icon"`
+	IconColor    string   `bson:"icon_color" json:"icon_color"`
+	Owner        string   `bson:"owner" json:"owner"`
+	Members      []string `bson:"members" json:"members"`
+	Created      int64    `bson:"created" json:"created"`
+	LastActive   int64    `bson:"last_active" json:"last_active"`
+	Deleted      bool     `bson:"deleted" json:"deleted"`
+	AllowPinning bool     `bson:"allow_pinning" json:"allow_pinning"`
 }
 
 type Post struct {
-	Id                string  `bson:"_id"`
-	Content           string  `bson:"p"`
-	UnfilteredContent *string `bson:"unfiltered_p,omitempty"`
+	Id                string     `bson:"_id"`
+	Content           string     `bson:"p"`
+	Attachments       []struct{} `bson:"attachments"`
+	UnfilteredContent *string    `bson:"unfiltered_p,omitempty"`
 	Timestamp         struct {
 		Epoch int64 `bson:"e"`
 	} `bson:"t"`
@@ -75,31 +81,19 @@ type Post struct {
 		Time       int64  `bson:"time" json:"time"`
 	} `bson:"revisions"`
 	EditedAt   *int64 `bson:"edited_at,omitempty"`
+	Pinned     bool   `bson:"pinned"`
 	Deleted    bool   `bson:"isDeleted"`
 	ModDeleted bool   `bson:"mod_deleted"`
 	DeletedAt  *int64 `bson:"deleted_at,omitempty"`
 }
 
-type IconUpload struct {
+type FileUpload struct {
 	Id         string
 	Hash       string
-	Mime       string
-	Size       int64
-	Width      int
-	Height     int
-	Uploader string
-	UploadedAt int64
-}
-
-type AttachmentUpload struct {
-	Id         string
-	Hash       string
-	Mime       string
+	Bucket     string
 	Filename   string
-	Size       int64
 	Width      int
 	Height     int
-	Uploader string
 	UploadedAt int64
-	UsedBy     string
+	Claimed    bool
 }
