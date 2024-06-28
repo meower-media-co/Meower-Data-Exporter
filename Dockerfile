@@ -1,4 +1,4 @@
-FROM golang
+FROM golang:latest-alpine
 WORKDIR /app
 COPY . .
 RUN go mod tidy
